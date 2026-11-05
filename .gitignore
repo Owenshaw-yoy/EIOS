@@ -2,3 +2,7 @@
 __pycache__/
 .DS_Store
 .env
+# 程序运行时生成的数据
+/load_example.csv
+/load_all_first96.csv
+/daily_total_load.csv
