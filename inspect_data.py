@@ -1,6 +1,11 @@
 # 此py文件意在读取从main中生成好的表格，方便后续分析数据时，把准备数据和分析数据分开
 # 导入其他文件定义好的函数
-from data_quality import check_required_columns, check_missing_values
+from data_quality import (
+    check_required_columns,
+    check_missing_values,
+    check_daily_time_steps,
+    check_loads_per_time
+)
 # 导入pandas
 import pandas as pd
 # 导入matplotlib绘图工具
@@ -32,7 +37,8 @@ import matplotlib.pyplot as plt
 
 # 读取load_all_first96.csv表格
 # 把结果整理为DataFrame的表格，交给变量csv_data
-csv_data = pd.read_csv("load_all_first96.csv")
+# csv_data = pd.read_csv("load_all_first96.csv")
+csv_data = pd.read_csv("load_selected_day.csv")
 
 print("数据规模：", csv_data.shape)
 print("各列的数据类型：")
@@ -97,6 +103,12 @@ if duplicate_rows.any():
     raise ValueError("同一场景、时间和负荷存在重复记录")
 
 print("时间和重复记录检查通过")
+time_step_count = check_daily_time_steps(csv_data)
+print("时间步完整性检查通过：", time_step_count)
+expected_load_count = 98
+checked_groups = check_loads_per_time(csv_data, expected_load_count)
+
+print("每个时间步的负荷数量检查通过：", checked_groups)
 
 # 下一步
 # 直接使用读回的 CSV 计算总负荷和峰值
@@ -140,6 +152,40 @@ print("最低总负荷出现的时间：", lowest_time)
 print(f"平均总负荷（MW）：{average_power:.2f}")
 print(f"负荷峰谷差（MW）：{peak_valley_difference:.2f}")
 
+# 下一步
+# 计算一天的使用电量，并导出一份日负荷汇总表
+# 电量 = 功率 x 时间 MWh
+
+# 每个时间步对应 15 分钟，也就是 0.25 小时
+interval_hours = 0.25
+
+# 估算所有负荷一天消耗的总电量
+daily_energy_mwh = csv_total["p_mw"].sum() * interval_hours
+
+print(f"估算总用电量（MWh）：{daily_energy_mwh:.2f}")
+
+# 把一天的分析结果整理成一张汇总表
+daily_summary = pd.DataFrame([
+    {
+        "scenario_id": csv_total["scenario_id"].iloc[0], # 取第一行
+        "date": csv_total["time"].iloc[0].date(), # 选取出日期的部分
+        "time_steps": len(csv_total),
+        "peak_power_mw": peak_power,
+        "peak_time": peak_time,
+        "lowest_power_mw": lowest_power,
+        "lowest_time": lowest_time,
+        "average_power_mw": average_power,
+        "peak_valley_difference_mw": peak_valley_difference,
+        "estimated_energy_mwh": daily_energy_mwh,
+    }
+])
+# 制表逻辑：我们只需要一行代表那一天的用电量，所以说列表里面包含了字典，
+# 有几个字典就是有几行，现在只有一个字典，即一行，字典里面的键单独为一列
+
+
+daily_summary.to_csv("daily_load_summary.csv", index=False, encoding="utf-8")
+print("日负荷汇总表已保存：daily_load_summary.csv")
+
 # 创建画布和坐标区域：fig：整张图，可以理解为画布；ax：坐标区域
 fig, ax = plt.subplots(figsize=(10, 5))
 
@@ -161,6 +207,36 @@ ax.scatter(
     s=55,
     label=f"Peak: {peak_power:.2f} MW", # 显示两位小数
     zorder=3,
+)
+
+# 用绿色点标记最低负荷
+ax.scatter(
+    lowest_time,
+    lowest_power,
+    color="#2a9d8f",
+    s=55,
+    label=f"Lowest: {lowest_power:.2f} MW",
+    zorder=3,
+)
+
+# 用虚线显示平均负荷
+ax.axhline( #.axhline 画一条水平线
+    y=average_power,
+    color="#8b7a52",
+    linestyle="--",
+    linewidth=1.5,
+    label=f"Average: {average_power:.2f} MW",
+)
+
+# 在图的左上角显示估算总电量
+ax.text( # .text 在图中添加文字
+    0.02,
+    0.97,
+    f"Estimated load energy: {daily_energy_mwh:.2f} MWh",
+    transform=ax.transAxes,
+    va="top",
+    fontsize=10,
+    bbox={"facecolor": "white", "edgecolor": "#dddddd", "alpha": 0.9},
 )
 
 # 设置图表和文字样式

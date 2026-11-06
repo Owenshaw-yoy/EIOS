@@ -6,3 +6,4 @@ __pycache__/
 /load_example.csv
 /load_all_first96.csv
 /daily_total_load.csv
+/load_selected_day.csv
