@@ -7,3 +7,8 @@ __pycache__/
 /load_all_first96.csv
 /daily_total_load.csv
 /load_selected_day.csv
+# V2 运行时生成的结果
+/daily_load_summary.csv
+/daily_load_curve.png
+/load_alerts.csv
+/eios.log
