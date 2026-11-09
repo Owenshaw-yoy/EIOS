@@ -393,3 +393,10 @@ fig.savefig("daily_load_curve.png", dpi=150) # 保存为分辨率为150
 
 print("图像已保存：daily_load_curve.png")
 
+# V3下一步：我们需要在数据库中导入某一天的完整时间步的总负荷曲线
+# 直接使用校对后的csv_total
+# 保存基于已检查负荷明细计算得到的总负荷，后续用于数据库入库
+# 更新python已经存在的daily_total_load.csv
+csv_total.to_csv("daily_total_load.csv", index=False, encoding="utf-8")
+print("总负荷表已保存：daily_total_load.csv，时间步数：", len(csv_total))
+

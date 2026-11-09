@@ -12,3 +12,4 @@ __pycache__/
 /daily_load_curve.png
 /load_alerts.csv
 /eios.log
+/db_daily_load_curve.png

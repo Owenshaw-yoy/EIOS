@@ -4,7 +4,7 @@
 import subprocess
 import sys
 
-# subprocess.ru运行第一个程序，并等待它结束
+# subprocess.run运行第一个程序，并等待它结束
 print("第一步：准备负荷数据", flush=True)
 # subprocess.run([sys.executable, "main.py"], check=True) 原写法
 date_arguments = sys.argv[1:]
